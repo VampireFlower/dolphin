@@ -230,6 +230,7 @@ MainWindow::MainWindow(std::unique_ptr<BootParameters> boot_parameters,
   InitControllers();
 
   CreateComponents();
+  setMinimumWidth(305);
 
   ConnectGameList();
   ConnectHost();

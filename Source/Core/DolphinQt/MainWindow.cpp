@@ -228,6 +228,7 @@ MainWindow::MainWindow(std::unique_ptr<BootParameters> boot_parameters,
   setAttribute(Qt::WA_NativeWindow);
 
   CreateComponents();
+  setMinimumWidth(305);
 
   ConnectGameList();
   ConnectHost();

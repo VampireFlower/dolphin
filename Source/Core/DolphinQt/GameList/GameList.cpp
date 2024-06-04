@@ -107,6 +107,7 @@ GameList::GameList(QWidget* parent) : QStackedWidget(parent), m_model(this)
   MakeListView();
   MakeGridView();
   MakeEmptyView();
+  setMinimumWidth(1);
 
   if (Settings::GetQSettings().contains(QStringLiteral("gridview/scale")))
     m_model.SetScale(Settings::GetQSettings().value(QStringLiteral("gridview/scale")).toFloat());
@@ -224,7 +225,7 @@ void GameList::MakeListView()
   UpdateColumnVisibility();
 
   m_list->verticalHeader()->hide();
-  m_list->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m_list->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   m_list->setFrameStyle(QFrame::NoFrame);
 
   hor_header->setSectionsMovable(true);

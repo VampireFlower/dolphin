@@ -182,6 +182,10 @@ std::optional<T> EvalIntegral(TokenType tp, std::string_view val)
     return std::accumulate(val.begin() + 2, val.end(), T{0}, bin_step);
   case TokenType::GPR:
   case TokenType::FPR:
+    if (val == "sp")
+        val = "r1";
+    else if (val == "rtoc")
+        val = "r2";
     return std::accumulate(val.begin() + 1, val.end(), T{0}, dec_step);
   case TokenType::CRField:
     return std::accumulate(val.begin() + 2, val.end(), T{0}, dec_step);
@@ -662,6 +666,10 @@ TokenType Lexer::ClassifyAlnum() const
   };
 
   if (std::tolower(alnum[0]) == 'r' && valid_regnum(alnum.substr(1)))
+  {
+    return TokenType::GPR;
+  }
+  else if ((eq_nocase(alnum, "sp")) || (eq_nocase(alnum, "rtoc")))
   {
     return TokenType::GPR;
   }

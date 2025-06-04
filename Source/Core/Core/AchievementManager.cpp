@@ -329,10 +329,11 @@ void AchievementManager::DoFrame()
       if (!system)
         return;
       Core::CPUThreadGuard thread_guard(*system);
-      u32 ram_size = system->GetMemory().GetRamSizeReal();
-      if (m_cloned_memory.size() != ram_size)
-        m_cloned_memory.resize(ram_size);
-      system->GetMemory().CopyFromEmu(m_cloned_memory.data(), 0, m_cloned_memory.size());
+      u32 mem2_size = system->GetMemory().GetExRamSizeReal();
+      if (m_cloned_memory.size() != MEM1_SIZE + mem2_size)
+        m_cloned_memory.resize(MEM1_SIZE + mem2_size);
+      system->GetMemory().CopyFromEmu(m_cloned_memory.data(), 0, MEM1_SIZE);
+      system->GetMemory().CopyFromEmu(m_cloned_memory.data() + MEM1_SIZE, MEM2_START, mem2_size);
     }
 #endif  // RC_CLIENT_SUPPORTS_RAINTEGRATION
     std::lock_guard lg{m_lock};
@@ -992,22 +993,22 @@ void AchievementManager::LoadGameCallback(int result, const char* error_message,
                     OSD::Duration::VERY_LONG, OSD::Color::RED);
     OSD::AddMessage("Please update Dolphin to a newer version.", OSD::Duration::VERY_LONG,
                     OSD::Color::RED);
-    instance.CloseGame();
     return;
+  }
+  if (result == RC_NO_GAME_LOADED && instance.m_dll_found)
+  {
+    // Allow developer tools for unidentified games
+    rc_client_set_read_memory_function(instance.m_client, MemoryPeeker);
+    instance.m_system.store(&Core::System::GetInstance(), std::memory_order_release);
+    WARN_LOG_FMT(ACHIEVEMENTS, "Unrecognized title ready for development.");
+    OSD::AddMessage("Unrecognized title loaded for development.", OSD::Duration::VERY_LONG,
+                    OSD::Color::YELLOW);
   }
   if (result != RC_OK)
   {
     WARN_LOG_FMT(ACHIEVEMENTS, "Failed to load data for current game.");
     OSD::AddMessage("Achievements are not supported for this title.", OSD::Duration::VERY_LONG,
                     OSD::Color::RED);
-    if (instance.m_dll_found && result == RC_NO_GAME_LOADED)
-    {
-      // Allow developer tools for unidentified games
-      rc_client_set_read_memory_function(instance.m_client, MemoryPeeker);
-      instance.m_system.store(&Core::System::GetInstance(), std::memory_order_release);
-      return;
-    }
-    instance.CloseGame();
     return;
   }
 
@@ -1268,8 +1269,7 @@ void AchievementManager::Request(const rc_api_request_t* request,
   std::string url = request->url;
   std::string post_data = request->post_data;
   AchievementManager::GetInstance().m_queue.Push(
-      [url = std::move(url), post_data = std::move(post_data), callback = std::move(callback),
-       callback_data = std::move(callback_data)] {
+      [url = std::move(url), post_data = std::move(post_data), callback, callback_data] {
         Common::HttpRequest http_request;
         Common::HttpRequest::Response http_response;
         if (!post_data.empty())
@@ -1316,10 +1316,10 @@ void AchievementManager::Request(const rc_api_request_t* request,
 u32 AchievementManager::MemoryVerifier(u32 address, u8* buffer, u32 num_bytes, rc_client_t* client)
 {
   auto& system = Core::System::GetInstance();
-  u32 ram_size = system.GetMemory().GetRamSizeReal();
-  if (address >= ram_size)
-    return 0;
-  return std::min(ram_size - address, num_bytes);
+  u32 mem2_size = system.GetMemory().GetExRamSizeReal();
+  if (address < MEM1_SIZE + mem2_size)
+    return std::min(MEM1_SIZE + mem2_size - address, num_bytes);
+  return 0;
 }
 
 u32 AchievementManager::MemoryPeeker(u32 address, u8* buffer, u32 num_bytes, rc_client_t* client)
@@ -1350,6 +1350,8 @@ u32 AchievementManager::MemoryPeeker(u32 address, u8* buffer, u32 num_bytes, rc_
     return 0;
   }
   Core::CPUThreadGuard thread_guard(system);
+  if (address > MEM1_SIZE)
+    address += (MEM2_START - MEM1_SIZE);
   for (u32 num_read = 0; num_read < num_bytes; num_read++)
   {
     auto value = system.GetMMU().HostTryReadU8(thread_guard, address + num_read,
@@ -1590,7 +1592,10 @@ void AchievementManager::MemoryPoker(u32 address, u8* buffer, u32 num_bytes, rc_
     return;
   Core::CPUThreadGuard thread_guard(*system);
   std::lock_guard lg{instance.m_memory_lock};
-  system->GetMemory().CopyToEmu(address, buffer, num_bytes);
+  if (address < MEM1_SIZE)
+    system->GetMemory().CopyToEmu(address, buffer, num_bytes);
+  else
+    system->GetMemory().CopyToEmu(address - MEM1_SIZE + MEM2_START, buffer, num_bytes);
   std::copy(buffer, buffer + num_bytes, instance.m_cloned_memory.begin() + address);
 }
 void AchievementManager::GameTitleEstimateHandler(char* buffer, u32 buffer_size,

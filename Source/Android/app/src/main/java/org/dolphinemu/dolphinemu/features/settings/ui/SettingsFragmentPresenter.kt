@@ -896,6 +896,22 @@ class SettingsFragmentPresenter(
                 0
             )
         )
+        sl.add(
+            SwitchSetting(
+                context,
+                BooleanSetting.MAIN_EMULATE_WII_SPEAK,
+                R.string.emulate_wii_speak,
+                0
+            )
+        )
+        sl.add(
+            SwitchSetting(
+                context,
+                BooleanSetting.MAIN_WII_SPEAK_MUTED,
+                R.string.mute_wii_speak,
+                0
+            )
+        )
     }
 
     private fun addAdvancedSettings(sl: ArrayList<SettingsItem>) {
@@ -1022,6 +1038,27 @@ class SettingsFragmentPresenter(
                 R.string.overclock_title_description,
                 0f,
                 400f,
+                "%",
+                1f,
+                false
+            )
+        )
+        sl.add(
+            SwitchSetting(
+                context,
+                BooleanSetting.MAIN_VI_OVERCLOCK_ENABLE,
+                R.string.vi_overclock_enable,
+                R.string.vi_overclock_enable_description
+            )
+        )
+        sl.add(
+            PercentSliderSetting(
+                context,
+                FloatSetting.MAIN_VI_OVERCLOCK,
+                R.string.vi_overclock_title,
+                R.string.vi_overclock_title_description,
+                0f,
+                500f,
                 "%",
                 1f,
                 false

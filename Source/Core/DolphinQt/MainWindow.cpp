@@ -766,9 +766,10 @@ void MainWindow::ConnectStack()
   connect(m_search_bar, &SearchBar::Search, m_game_list, &GameList::SetSearchTerm);
 
   m_stack->addWidget(widget);
-  UpdateGameListVisibility();
 
   setCentralWidget(m_stack);
+
+  UpdateGameListVisibility();
 
   setDockOptions(DockOption::AllowNestedDocks | DockOption::AllowTabbedDocks);
   setTabPosition(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea, QTabWidget::North);

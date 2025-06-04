@@ -724,6 +724,15 @@ void MainWindow::ConnectGameList()
 
   connect(m_game_list, &GameList::OpenGeneralSettings, this, &MainWindow::ShowGeneralWindow);
   connect(m_game_list, &GameList::OpenGraphicsSettings, this, &MainWindow::ShowGraphicsWindow);
+
+  connect(&Settings::Instance(), &Settings::GameListDisabledWhileDebuggingChanged, this,
+          &MainWindow::UpdateGameListVisibility);
+  connect(&Settings::Instance(), &Settings::DebugModeToggled, this,
+          &MainWindow::UpdateGameListVisibility);
+  connect(&Settings::Instance(), &Settings::ConfigChanged, this,
+          &MainWindow::UpdateGameListVisibility);
+  connect(&Settings::Instance(), &Settings::EmulationStateChanged, this,
+          &MainWindow::UpdateGameListVisibility);
 }
 
 void MainWindow::ConnectRenderWidget()
@@ -755,6 +764,7 @@ void MainWindow::ConnectStack()
   connect(m_search_bar, &SearchBar::Search, m_game_list, &GameList::SetSearchTerm);
 
   m_stack->addWidget(widget);
+  UpdateGameListVisibility();
 
   setCentralWidget(m_stack);
 
@@ -1710,6 +1720,27 @@ void MainWindow::UpdateScreenSaverInhibition()
   m_is_screensaver_inhibited = inhibit;
 
   UICommon::InhibitScreenSaver(inhibit);
+}
+
+void MainWindow::UpdateGameListVisibility()
+{
+  const bool hide = Settings::Instance().IsDebugModeEnabled() &&
+                    Settings::Instance().IsGameListDisabledWhileDebugging() &&
+                    !m_rendering_to_main;
+
+  if (hide && m_stack->isVisible())
+    m_game_list_geometry = m_stack->saveGeometry();
+
+  m_game_list->setVisible(!hide);
+  m_search_bar->setVisible(!hide);
+  m_stack->setVisible(!hide);
+
+  if (!hide)
+  {
+    if (!m_game_list_geometry.isEmpty())
+      m_stack->restoreGeometry(m_game_list_geometry);
+    m_stack->updateGeometry();
+  }
 }
 
 bool MainWindow::eventFilter(QObject* object, QEvent* event)

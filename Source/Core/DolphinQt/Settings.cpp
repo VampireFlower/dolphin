@@ -758,6 +758,21 @@ bool Settings::AreWidgetsLocked() const
   return GetQSettings().value(QStringLiteral("widgets/locked"), true).toBool();
 }
 
+void Settings::SetGameListDisabledWhileDebugging(bool disabled)
+{
+  if (IsGameListDisabledWhileDebugging() == disabled)
+    return;
+
+  GetQSettings().setValue(QStringLiteral("gamelist/disable_with_debugger"), disabled);
+
+  emit GameListDisabledWhileDebuggingChanged(disabled);
+}
+
+bool Settings::IsGameListDisabledWhileDebugging() const
+{
+  return GetQSettings().value(QStringLiteral("gamelist/disable_with_debugger"), false).toBool();
+}
+
 bool Settings::IsBatchModeEnabled() const
 {
   return m_batch;

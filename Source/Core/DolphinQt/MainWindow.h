@@ -217,6 +217,7 @@ private:
   QStringList PromptFileNames();
 
   void UpdateScreenSaverInhibition();
+  void UpdateGameListVisibility();
 
   void OnStopComplete();
   void dragEnterEvent(QDragEnterEvent* event) override;
@@ -281,4 +282,5 @@ private:
   WatchWidget* m_watch_widget;
   CheatsManager* m_cheats_manager;
   QByteArray m_render_widget_geometry;
+  QByteArray m_game_list_geometry;
 };

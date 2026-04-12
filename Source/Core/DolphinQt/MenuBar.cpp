@@ -198,6 +198,7 @@ void MenuBar::OnDebugModeToggled(bool enabled)
   m_show_network->setVisible(enabled);
   m_show_jit->setVisible(enabled);
   m_show_assembler->setVisible(enabled);
+  m_disable_gamelist_debugger->setVisible(enabled);
 
   if (enabled)
   {
@@ -574,6 +575,14 @@ void MenuBar::AddViewMenu()
           &Settings::SetAssemblerVisible);
   connect(&Settings::Instance(), &Settings::AssemblerVisibilityChanged, m_show_assembler,
           &QAction::setChecked);
+
+  m_disable_gamelist_debugger = view_menu->addAction(tr("Disable Game List While Debugging"));
+  m_disable_gamelist_debugger->setCheckable(true);
+  m_disable_gamelist_debugger->setChecked(Settings::Instance().IsGameListDisabledWhileDebugging());
+  connect(m_disable_gamelist_debugger, &QAction::toggled, &Settings::Instance(),
+          &Settings::SetGameListDisabledWhileDebugging);
+  connect(&Settings::Instance(), &Settings::GameListDisabledWhileDebuggingChanged,
+          m_disable_gamelist_debugger, &QAction::setChecked);
 
   view_menu->addSeparator();
 

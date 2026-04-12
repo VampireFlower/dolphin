@@ -110,6 +110,8 @@ public:
   void ReloadTitleDB();
   bool IsAutoRefreshEnabled() const;
   void SetAutoRefreshEnabled(bool enabled);
+  bool IsGameListDisabledWhileDebugging() const;
+  void SetGameListDisabledWhileDebugging(bool disabled);
 
   // Emulation
   int GetStateSlot() const;
@@ -211,6 +213,7 @@ signals:
   void LogConfigVisibilityChanged(bool visible);
   void ToolBarVisibilityChanged(bool visible);
   void WidgetLockChanged(bool locked);
+  void GameListDisabledWhileDebuggingChanged(bool disabled);
   void EnableCheatsChanged(bool enabled);
   void WatchVisibilityChanged(bool visible);
   void BreakpointsVisibilityChanged(bool visible);
